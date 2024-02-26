@@ -50,7 +50,8 @@ async function test(){
     // console.log(playlists);
     // let playlistSongs = await getPlaylistSongIds('1IVwtXaUJUj04E31RlB6Dw');
     // console.log(playlistSongs);
-    let playlistsWithSong = await getPlaylistsBySong('2c009057025d4302');
+    //let playlistsWithSong = await getPlaylistsBySong('4bQnTqI06ZRyl8QL2AmIMW'); // Returns Digital Fire and Thunderbird
+    let playlistsWithSong = await getPlaylistsBySong('6Vv0mO1JBb2rMj1iTm2buD');
     console.log(playlistsWithSong);
     // let artistData = await getArtistData('2wY79sveU1spLqoDqtJeJh');
 }
@@ -65,11 +66,11 @@ async function getPlaylists(){
         }
     }
     let playlists = [];
-    await axios.get('https://api.spotify.com/v1/users/' + process.env.SPOTIFY_USER_ID + '/playlists', config)
+    await axios.get('https://api.spotify.com/v1/users/' + process.env.SPOTIFY_USER_ID + '/playlists?offset=0&limit=50', config)
     .then(response => {
         //console.log(response.data);
         // map response data to array of playlist objects containing the playlist name and id
-        playlists = response.data.items.map(item => ({name: item.name, id: item.id}));
+        playlists = response.data.items;//.map(item => ({name: item.name, id: item.id}));
     })
     .catch(error => {
         console.error('Get Playlists Error:', error.message);
@@ -80,25 +81,25 @@ async function getPlaylists(){
 
 // GET PLAYLIST SONGS \\
 // Return an array of all the playlist songs
-async function getPlaylistSongIds(playlistId){
+async function getPlaylistSongs(playlistId){
     var newAccessToken = await getSpotifyAccessToken();
     var config = {
         headers: {
             'Authorization': 'Bearer ' + newAccessToken.access_token
         }
     }
-    let playlistSongIds = [];
+    let playlistSongs = [];
     await axios.get('https://api.spotify.com/v1/playlists/' + playlistId + '/tracks', config)
     .then(response => {
         //console.log(response.data);
         // map response data to get array of track ids
-        playlistSongIds = response.data.items.map(item => item.track.id);
+        playlistSongs = response.data.items;//.map(item => item.track.id);
     })
     .catch(error => {
         console.error('Get Playlist Songs Error:', error.message);
     });
     //console.log(playlistSongIds);
-    return playlistSongIds;
+    return playlistSongs;
 }
 
 // GET PLAYLISTS BY SONG \\
@@ -107,9 +108,9 @@ async function getPlaylistsBySong(songId){
     let playlists = await getPlaylists();
     let playlistsWithSong = [];
     for(let i = 0; i < playlists.length; i++){
-        let playlistSongs = await getPlaylistSongIds(playlists[i].id);
-        if(playlistSongs.includes(songId)){
-            playlistsWithSong.push(playlists[i]);
+        let playlistSongs = await getPlaylistSongs(playlists[i].id);
+        if (playlistSongs.some(song => song.track.id === songId)){
+            playlistsWithSong.push({name: playlists[i].name, id: playlists[i].id});
         }
     }
     return playlistsWithSong;
