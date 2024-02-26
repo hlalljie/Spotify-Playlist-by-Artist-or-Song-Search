@@ -51,8 +51,10 @@ async function test(){
     // let playlistSongs = await getPlaylistSongIds('1IVwtXaUJUj04E31RlB6Dw');
     // console.log(playlistSongs);
     //let playlistsWithSong = await getPlaylistsBySong('4bQnTqI06ZRyl8QL2AmIMW'); // Returns Digital Fire and Thunderbird
-    let playlistsWithSong = await getPlaylistsBySong('6Vv0mO1JBb2rMj1iTm2buD');
-    console.log(playlistsWithSong);
+    // let playlistsWithSong = await getPlaylistsBySong('6Vv0mO1JBb2rMj1iTm2buD'); // Returns Chilling in the lobby and Lofi megalist
+    // console.log(playlistsWithSong);
+    let playlistsWithArtist = await getPlaylistsByArtist('3JKd43oYlE7ifoodXetsuw');
+    console.log(playlistsWithArtist);
     // let artistData = await getArtistData('2wY79sveU1spLqoDqtJeJh');
 }
 
@@ -115,6 +117,20 @@ async function getPlaylistsBySong(songId){
     }
     return playlistsWithSong;
     
+}
+
+// GET PLAYLISTS BY ARTIST \\
+// Return all user playlists that containing a given artist id
+async function getPlaylistsByArtist(artistId){
+    let playlists = await getPlaylists();
+    let playlistsWithArtist = [];
+    for(let i = 0; i < playlists.length; i++){
+        let playlistSongs = await getPlaylistSongs(playlists[i].id);
+        if (playlistSongs.some(song => song.track.artists[0].id === artistId)){
+            playlistsWithArtist.push({name: playlists[i].name, id: playlists[i].id});
+        }
+    }
+    return playlistsWithArtist;
 }
 
 // GET ARTIST DATA (FOR TESTING) \\
