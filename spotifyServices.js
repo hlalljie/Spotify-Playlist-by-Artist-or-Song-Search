@@ -44,6 +44,78 @@ async function getSpotifyAccessToken(){
 }
 // END GET ACCESS TOKEN \\
 
+
+async function test(){
+    // let playlists = await getPlaylists();
+    // console.log(playlists);
+    // let playlistSongs = await getPlaylistSongIds('1IVwtXaUJUj04E31RlB6Dw');
+    // console.log(playlistSongs);
+    let playlistsWithSong = await getPlaylistsBySong('2c009057025d4302');
+    console.log(playlistsWithSong);
+    // let artistData = await getArtistData('2wY79sveU1spLqoDqtJeJh');
+}
+
+// GET PLAYLISTS \\
+// Save all of the playlists for the user in an array
+async function getPlaylists(){
+    var newAccessToken = await getSpotifyAccessToken();
+    var config = {
+        headers: {
+            'Authorization': 'Bearer ' + newAccessToken.access_token
+        }
+    }
+    let playlists = [];
+    await axios.get('https://api.spotify.com/v1/users/' + process.env.SPOTIFY_USER_ID + '/playlists', config)
+    .then(response => {
+        //console.log(response.data);
+        // map response data to array of playlist objects containing the playlist name and id
+        playlists = response.data.items.map(item => ({name: item.name, id: item.id}));
+    })
+    .catch(error => {
+        console.error('Get Playlists Error:', error.message);
+    });
+    //console.log(playlists);
+    return playlists;
+}
+
+// GET PLAYLIST SONGS \\
+// Return an array of all the playlist songs
+async function getPlaylistSongIds(playlistId){
+    var newAccessToken = await getSpotifyAccessToken();
+    var config = {
+        headers: {
+            'Authorization': 'Bearer ' + newAccessToken.access_token
+        }
+    }
+    let playlistSongIds = [];
+    await axios.get('https://api.spotify.com/v1/playlists/' + playlistId + '/tracks', config)
+    .then(response => {
+        //console.log(response.data);
+        // map response data to get array of track ids
+        playlistSongIds = response.data.items.map(item => item.track.id);
+    })
+    .catch(error => {
+        console.error('Get Playlist Songs Error:', error.message);
+    });
+    //console.log(playlistSongIds);
+    return playlistSongIds;
+}
+
+// GET PLAYLISTS BY SONG \\
+// Return all user playlists that containing a given song id
+async function getPlaylistsBySong(songId){
+    let playlists = await getPlaylists();
+    let playlistsWithSong = [];
+    for(let i = 0; i < playlists.length; i++){
+        let playlistSongs = await getPlaylistSongIds(playlists[i].id);
+        if(playlistSongs.includes(songId)){
+            playlistsWithSong.push(playlists[i]);
+        }
+    }
+    return playlistsWithSong;
+    
+}
+
 // GET ARTIST DATA (FOR TESTING) \\
 async function getArtistData(artistId){
     var newAccessToken = await getSpotifyAccessToken();
@@ -55,7 +127,7 @@ async function getArtistData(artistId){
     let artistData = {};
     await axios.get('https://api.spotify.com/v1/artists/' + artistId, config)
     .then(response => {
-        console.log(response.data);
+        //console.log(response.data);
         artistData = response.data;
     })
     .catch(error => {
@@ -65,6 +137,10 @@ async function getArtistData(artistId){
 }
 // END GET ARTIST DATA \\
 
+test();
+
 module.exports = {
-    getArtistData
-  };
+    getArtistData,
+    getPlaylists,
+    getPlaylistsBySong
+};

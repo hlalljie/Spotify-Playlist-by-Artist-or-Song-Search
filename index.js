@@ -22,9 +22,32 @@ app.get('/', async function(req, res) {
     }
 });
 
+// GET PLAYLISTS BY SONG \\
+// Get playlists from a user that contains a certain song
+app.get('/playlists/song/:songId', async function(req, res){
+    try {
+        let playlists = await services.getPlaylistsBySong(req.params.songId);
+        res.send(playlists);
+    } catch (error) {
+        // Handle errors here
+        res.status(500).send('Internal Server Error requesting /playlists/' + req.params.songId);
+    }
+})
+
+// GET PLAYLISTS \\
+// Get playlists from a user
+app.get('/playlists', async function(req, res){
+    try {
+        let playlists = await services.getPlaylists();
+        res.send(playlists);
+    } catch (error) {
+        // Handle errors here
+        res.status(500).send('Internal Server Error requesting /playlists');
+    }
+})
+
 app.get('/artist/:artistId', async function(req, res){
     try {
-        //var newAccessToken = await getSpotifyAccessToken();
         let artistData = await services.getArtistData(req.params.artistId)
         res.send(artistData);
     } catch (error) {
