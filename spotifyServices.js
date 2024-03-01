@@ -53,32 +53,40 @@ async function test(){
     //let playlistsWithSong = await getPlaylistsBySong('4bQnTqI06ZRyl8QL2AmIMW'); // Returns Digital Fire and Thunderbird
     // let playlistsWithSong = await getPlaylistsBySong('6Vv0mO1JBb2rMj1iTm2buD'); // Returns Chilling in the lobby and Lofi megalist
     // console.log(playlistsWithSong);
-    let playlistsWithArtist = await getPlaylistsByArtist('3JKd43oYlE7ifoodXetsuw');
+    // let playlistsWithArtist = await getPlaylistsByArtist('3JKd43oYlE7ifoodXetsuw'); // shook
+    let playlistsWithArtist = await getPlaylistsByArtist('4LG4Bs1Gadht7TCrMytQUO'); // digital fire
     console.log(playlistsWithArtist);
     // let artistData = await getArtistData('2wY79sveU1spLqoDqtJeJh');
 }
 
 // GET PLAYLISTS \\
 // Save all of the playlists for the user in an array
+// TODO - return page by page to increase intial request speed while also continuing to search older playlists
 async function getPlaylists(){
-    var newAccessToken = await getSpotifyAccessToken();
-    var config = {
-        headers: {
-            'Authorization': 'Bearer ' + newAccessToken.access_token
+    try{
+        var newAccessToken = await getSpotifyAccessToken();
+        var config = {
+            headers: {
+                'Authorization': 'Bearer ' + newAccessToken.access_token
+            }
         }
+        let playlists = []
+        let pagePlaylists = [];
+        let response = await axios.get('https://api.spotify.com/v1/users/' + process.env.SPOTIFY_USER_ID + '/playlists?offset=0&limit=50', config)
+        pagePlaylists = await response.data.items;//.map(item => ({name: item.name, id: item.id}));
+        playlists = playlists.concat(pagePlaylists);
+        
+        while (response.data.next){
+            response = await axios.get(response.data.next, config)
+            pagePlaylists = await response.data.items;//.map(item => ({name: item.name, id: item.id}));
+            playlists = playlists.concat(pagePlaylists);
+        }
+        return playlists
     }
-    let playlists = [];
-    await axios.get('https://api.spotify.com/v1/users/' + process.env.SPOTIFY_USER_ID + '/playlists?offset=0&limit=50', config)
-    .then(response => {
-        //console.log(response.data);
-        // map response data to array of playlist objects containing the playlist name and id
-        playlists = response.data.items;//.map(item => ({name: item.name, id: item.id}));
-    })
-    .catch(error => {
+    catch(error){
         console.error('Get Playlists Error:', error.message);
-    });
-    //console.log(playlists);
-    return playlists;
+        throw error; // rethrow the error if needed
+    };
 }
 
 // GET PLAYLIST SONGS \\
@@ -92,7 +100,7 @@ async function getPlaylistSongs(playlistId){
     }
     let playlistSongs = [];
     await axios.get('https://api.spotify.com/v1/playlists/' + playlistId + '/tracks', config)
-    .then(response => {
+    .then(async response => {
         //console.log(response.data);
         // map response data to get array of track ids
         playlistSongs = response.data.items;//.map(item => item.track.id);
@@ -100,7 +108,7 @@ async function getPlaylistSongs(playlistId){
     .catch(error => {
         console.error('Get Playlist Songs Error:', error.message);
     });
-    //console.log(playlistSongIds);
+    // console.log(playlistSongs);
     return playlistSongs;
 }
 
